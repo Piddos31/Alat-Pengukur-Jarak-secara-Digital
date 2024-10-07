@@ -2,11 +2,8 @@
 #include <LiquidCrystal_I2C.h>
 #include <RTClib.h>
 
-// Initialize LCD with I2C address 0x27 and size 16x2
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 RTC_DS3231 rtc;
-
-// Define pins for ultrasonic sensor,laser, and button
 const int trigPin = 9;
 const int echoPin = 10;
 const int laserPin = 11;
@@ -18,25 +15,20 @@ char currentTime[9];
 char currentDate[11];
 char currentDay[10];
 
-int lastButtonState = HIGH; // Store last button state
-int currentButtonState;     // Store current button state
-unsigned long lastDebounceTime = 0;  // Last debounce time
-unsigned long debounceDelay = 50;    // Debounce delay
+int lastButtonState = HIGH; 
+int currentButtonState;
+unsigned long lastDebounceTime = 0;
+unsigned long debounceDelay = 50;
 
 void setup() {
-  // Initialize pins for ultrasonic sensor
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
-  // Initialize pin for laser module
   pinMode(laserPin, OUTPUT);
   digitalWrite(laserPin, HIGH); // Turn on laser permanently
-  pinMode(buttonPin, INPUT_PULLUP); // Enable internal pull-up resistor
+  pinMode(buttonPin, INPUT_PULLUP);
 
-  // Initialize Serial Monitor
   Serial.begin(9600);
-  // Start communication with LCD
   lcd.init();
-  // Turn on LCD backlight
   lcd.backlight();
   lcd.setCursor(0, 0);
   lcd.print("Distance:");
@@ -49,7 +41,7 @@ void setup() {
 
   if (rtc.lostPower()) {
     Serial.println("RTC lost power, let's set the time!");
-    rtc.adjust(DateTime(F(__DATE__), F(__TIME__))); // Set RTC time to the compilation time
+    rtc.adjust(DateTime(F(__DATE__), F(__TIME__))); 
     // // Set RTC time manually (example: 2nd August 2024, 22:07:00)
     // rtc.adjust(DateTime(2024, 8, 10, 13, 35, 15)); // set time manually
   }
@@ -71,8 +63,8 @@ void setup() {
   Serial.println();
 
   // Send PLX-DAQ headers to Serial Monitor
-  Serial.println("CLEARDATA"); // Clear data in Excel
-  Serial.println("LABEL,Time,Date,Day,Distance (cm)"); // Set column labels in Excel
+  Serial.println("CLEARDATA"); 
+  Serial.println("LABEL,Time,Date,Day,Distance (cm)");
   Serial.println("RESETTIMER");
 }
 
@@ -80,21 +72,18 @@ void loop() {
   // Read the state of the button and debounce
   int reading = digitalRead(buttonPin);
   if (reading != lastButtonState) {
-    lastDebounceTime = millis(); // Update debounce time
+    lastDebounceTime = millis();
   }
   if (millis() - lastDebounceTime > debounceDelay) {
     if (reading != currentButtonState) {
       currentButtonState = reading;
-      // If button is pressed (LOW due to pull-up resistor), read distance
       if (currentButtonState == LOW) {
-        // Send ultrasonic pulse
         digitalWrite(trigPin, LOW);
         delayMicroseconds(2);
         digitalWrite(trigPin, HIGH);
         delayMicroseconds(10);
         digitalWrite(trigPin, LOW);
 
-        // Read the echo pulse duration
         long duration = pulseIn(echoPin, HIGH);
 
         // Convert duration to distance
@@ -118,7 +107,7 @@ void loop() {
 
         // Display distance on LCD
         lcd.setCursor(0, 1);
-        lcd.print("       "); // Clear the row before writing
+        lcd.print("       ");
         lcd.setCursor(0, 1);
         lcd.print(distance);
         lcd.print(" cm");
